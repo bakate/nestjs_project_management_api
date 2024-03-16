@@ -14,7 +14,7 @@ import { ProjectsModule } from './projects/projects.module';
     ThrottlerModule.forRoot([
       {
         ttl: 6000,
-        limit: 2,
+        limit: 10,
       },
     ]),
   ],
