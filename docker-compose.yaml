@@ -1,40 +1,38 @@
 version: '3.8'
 
 services:
-  app-dev:
-    container_name: nestjs-app-dev
+  # nestjs-backend service
+  nestjs-backend:
+    container_name: nestjs-backend
+    build: .
     env_file:
       - .env
-    build:
-      context: .
-      dockerfile: Dockerfile
     ports:
       - ${PORT}:${PORT}
     volumes:
       - .:/usr/src/app
+      - /usr/src/app/node_modules
     depends_on:
-      - mongodb
-    restart: unless-stopped
+      - mongo_db
+    networks:
+      - nestjs-api-network
 
-  # start the mongodb service as a separate container
-  mongodb:
-    image: mongo:7.0
-    container_name: mongodb
-    restart: unless-stopped
+  # mongo_db service
+  mongo_db:
+    image: mongo:latest
+    container_name: mongo_db
+    restart: always
     ports:
       - 27017:27017
     volumes:
       - mongo-data:/data/db
-    env_file:
-      - .env
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${DATABASE_USER}
-      - MONGO_INITDB_ROOT_PASSWORD=${DATABASE_PASSWORD}
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    networks:
+      - nestjs-api-network
 
 volumes:
   mongo-data:
+    driver: local
+
+networks:
+  nestjs-api-network:
+    driver: bridge

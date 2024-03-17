@@ -18,9 +18,7 @@ import { ProjectsModule } from './projects/projects.module';
         limit: 10,
       },
     ]),
-    MongooseModule.forRoot(process.env.DATABASE_URI, {
-      dbName: process.env.DATABASE_NAME,
-    }),
+    MongooseModule.forRoot(process.env.MONGODB_URL),
   ],
   controllers: [AppController],
   providers: [
