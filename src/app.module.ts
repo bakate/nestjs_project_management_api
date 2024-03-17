@@ -3,14 +3,12 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ProjectsModule } from './projects/projects.module';
+import { UsersModule } from './users/users.module';
 
+const FEATURES_MODULES = [ProjectsModule, UsersModule];
 @Module({
   imports: [
-    ProjectsModule,
-
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([
       {
@@ -19,10 +17,10 @@ import { ProjectsModule } from './projects/projects.module';
       },
     ]),
     MongooseModule.forRoot(process.env.MONGODB_URL),
+    ...FEATURES_MODULES,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
