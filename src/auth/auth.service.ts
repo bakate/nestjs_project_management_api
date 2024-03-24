@@ -76,9 +76,8 @@ export class AuthService {
       .select('+password');
 
     if (!user) {
-      throw new HttpException(
-        'User not found',
-        HttpStatus.UNPROCESSABLE_ENTITY,
+      throw new UnauthorizedException(
+        `User with email:${loginDto.email} not found `,
       );
     }
 
@@ -88,10 +87,7 @@ export class AuthService {
     );
 
     if (!isPasswordCorrect) {
-      throw new HttpException(
-        'Incorrect password',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
+      throw new UnauthorizedException('Incorrect password');
     }
 
     const token = this.jwtService.sign({ id: user.id }, {});
