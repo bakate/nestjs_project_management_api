@@ -4,16 +4,19 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
 import { Model } from 'mongoose';
 import { LoginDto, SignUpDto } from './dto/user.dto';
 import { User } from './schemas/user.schema';
 
 @Injectable()
 export class AuthService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private jwtService: JwtService,
+  ) {}
 
   async verifyUserPassword(username: Pick<User, 'username'>, password: string) {
     const userWithPassword = await this.userModel.findOne({
@@ -39,10 +42,6 @@ export class AuthService {
     };
   }
 
-  generateJwt(userId: string): string {
-    return sign({ id: userId }, 'JWT_SECRET');
-  }
-
   async getPasswordHash(password: string) {
     const hash = await bcrypt.hash(password, 10);
     return hash;
@@ -66,7 +65,7 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const token = this.generateJwt(user.id);
+    const token = this.jwtService.sign({ id: user.id });
 
     return { token };
   }
@@ -95,7 +94,7 @@ export class AuthService {
       );
     }
 
-    const token = this.generateJwt(user.id);
+    const token = this.jwtService.sign({ id: user.id }, {});
 
     return { token };
   }
