@@ -18,8 +18,16 @@ describe('AuthController', () => {
   const jwtToken = faker.string.uuid();
 
   const mockAuthService = {
-    signUpUser: jest.fn().mockResolvedValueOnce(jwtToken),
-    loginUser: jest.fn().mockResolvedValueOnce(jwtToken),
+    signUpUser: jest.fn().mockResolvedValueOnce({
+      userId: mockUser.id,
+      username: mockUser.username,
+      token: jwtToken,
+    }),
+    loginUser: jest.fn().mockResolvedValueOnce({
+      userId: mockUser.id,
+      username: mockUser.username,
+      token: jwtToken,
+    }),
   };
 
   beforeEach(async () => {
@@ -46,7 +54,11 @@ describe('AuthController', () => {
       };
 
       const result = await controller.signUp(signUpDto);
-      expect(result).toEqual({ token: jwtToken });
+      expect(result).toEqual({
+        token: jwtToken,
+        userId: mockUser.id,
+        username: mockUser.username,
+      });
       expect(authService.signUpUser).toHaveBeenCalledWith(signUpDto);
     });
   });
@@ -59,7 +71,11 @@ describe('AuthController', () => {
       };
 
       const result = await controller.login(loginDto);
-      expect(result).toEqual({ token: jwtToken });
+      expect(result).toEqual({
+        token: jwtToken,
+        userId: mockUser.id,
+        username: mockUser.username,
+      });
       expect(authService.loginUser).toHaveBeenCalledWith(loginDto);
     });
   });

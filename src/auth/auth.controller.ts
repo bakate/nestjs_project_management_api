@@ -1,8 +1,25 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiCreatedResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto, SignUpDto } from './dto/user.dto';
+import { LoginDto, SignUpDto, UserPayload } from './dto/user.dto';
 
+const userResponseSchema = {
+  type: 'object',
+  properties: {
+    token: {
+      type: 'string',
+      example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxMjIwZjQwZjQ',
+    },
+    username: {
+      type: 'string',
+      example: 'john_doe',
+    },
+    userId: {
+      type: 'string',
+      example: '61220f40f445FDDDQDQDCA3432423',
+    },
+  },
+};
 @Controller('local-auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -10,36 +27,18 @@ export class AuthController {
   @Post('login')
   @ApiCreatedResponse({
     description: 'User logged in successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        token: {
-          type: 'string',
-          example:
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxMjIwZjQwZjQ',
-        },
-      },
-    },
+    schema: userResponseSchema,
   })
-  login(@Body() loginDto: LoginDto): Promise<{ token: string }> {
+  login(@Body() loginDto: LoginDto): Promise<UserPayload> {
     return this.authService.loginUser(loginDto);
   }
 
   @Post('signup')
   @ApiCreatedResponse({
     description: 'User signed up successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        token: {
-          type: 'string',
-          example:
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxMjIwZjQwZjQ',
-        },
-      },
-    },
+    schema: userResponseSchema,
   })
-  signUp(@Body() createUserDto: SignUpDto): Promise<{ token: string }> {
+  signUp(@Body() createUserDto: SignUpDto): Promise<UserPayload> {
     return this.authService.signUpUser(createUserDto);
   }
 

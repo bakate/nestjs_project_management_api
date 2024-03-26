@@ -71,6 +71,8 @@ describe('AuthService', () => {
       expect(bcrypt.hash).toHaveBeenCalledTimes(1);
       expect(result).toEqual({
         token,
+        userId: mockUser.id,
+        username: mockUser.username,
       });
     });
   });
@@ -94,6 +96,8 @@ describe('AuthService', () => {
       const result = await authService.loginUser(loginDto);
       expect(result).toEqual({
         token,
+        userId: mockUser.id,
+        username: mockUser.username,
       });
     });
 

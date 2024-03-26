@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcryptjs';
 import { Model } from 'mongoose';
-import { LoginDto, SignUpDto } from './dto/user.dto';
+import { LoginDto, SignUpDto, UserPayload } from './dto/user.dto';
 import { User } from './schemas/user.schema';
 
 @Injectable()
@@ -47,7 +47,7 @@ export class AuthService {
     return hash;
   }
 
-  async signUpUser(body: SignUpDto): Promise<{ token: string }> {
+  async signUpUser(body: SignUpDto): Promise<UserPayload> {
     // make sure the user does not exist
     const existingUser = await this.userModel.findOne({ email: body.email });
     if (existingUser) {
@@ -65,12 +65,16 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const token = this.jwtService.sign({ id: user.id });
+    const token = this.jwtService.sign({ userId: user.id, email: user.email });
 
-    return { token };
+    return {
+      token,
+      userId: user.id,
+      username: user.username,
+    };
   }
 
-  async loginUser(loginDto: LoginDto): Promise<{ token: string }> {
+  async loginUser(loginDto: LoginDto): Promise<UserPayload> {
     const user = await this.userModel
       .findOne({ email: loginDto.email })
       .select('+password');
@@ -90,9 +94,16 @@ export class AuthService {
       throw new UnauthorizedException('Incorrect password');
     }
 
-    const token = this.jwtService.sign({ id: user.id }, {});
+    const token = this.jwtService.sign(
+      { userId: user.id, email: user.email },
+      {},
+    );
 
-    return { token };
+    return {
+      token,
+      userId: user.id,
+      username: user.username,
+    };
   }
 
   async fetchAllUsers() {

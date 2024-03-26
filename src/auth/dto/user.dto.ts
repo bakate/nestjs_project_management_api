@@ -50,3 +50,9 @@ export class LoginDto {
   @MinLength(8)
   readonly password: string;
 }
+
+export type UserPayload = {
+  userId: string;
+  username: string;
+  token: string;
+};
