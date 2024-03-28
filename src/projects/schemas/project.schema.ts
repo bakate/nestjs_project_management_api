@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { IsString } from 'class-validator';
 import mongoose from 'mongoose';
+import { Task } from './task.schema';
 
 @Schema({ collection: 'projects', timestamps: true })
 export class Project extends mongoose.Document {
@@ -20,7 +22,8 @@ export class Project extends mongoose.Document {
 
   @Prop({
     type: String,
-    required: true,
+    enum: ['active', 'suspended', 'completed'],
+    default: 'active',
     trim: true,
   })
   status: string;
@@ -28,8 +31,18 @@ export class Project extends mongoose.Document {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+    required: true,
   })
+  @IsString()
   userId: string;
+
+  @Prop([
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Task',
+    },
+  ])
+  tasks: Task[];
 }
 
 const ProjectSchema = SchemaFactory.createForClass(Project);

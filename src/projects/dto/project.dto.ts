@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmpty, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { CreateTaskDto } from './task.dto';
 
 export class CreateProjectDto {
   @ApiProperty({
@@ -10,7 +11,7 @@ export class CreateProjectDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(3)
-  readonly name: string;
+  name: string;
 
   @ApiProperty({
     example: 'Project Description',
@@ -24,10 +25,10 @@ export class CreateProjectDto {
   @ApiProperty({
     example: 'Project Status',
     description: 'The status of the project',
-    required: true,
+    enum: ['active', 'suspended', 'completed'],
+    default: 'active',
+    required: false,
   })
-  @IsNotEmpty()
-  @IsString()
   status: string;
 
   @ApiProperty({
@@ -37,6 +38,13 @@ export class CreateProjectDto {
   })
   @IsEmpty({ message: 'You cannot pass the user id' })
   userId: string;
+
+  @ApiProperty({
+    example: 'Project Tasks',
+    description: 'The tasks of the project',
+    required: false,
+  })
+  tasks?: CreateTaskDto[];
 }
 
 export class UpdateProjectDto {
@@ -57,7 +65,8 @@ export class UpdateProjectDto {
   @ApiProperty({
     example: 'Project Status',
     description: 'The status of the project',
-    required: false,
+    enum: ['active', 'suspended', 'completed'],
+    default: 'active',
   })
   status: string;
 
@@ -68,4 +77,11 @@ export class UpdateProjectDto {
   })
   @IsEmpty({ message: 'You cannot pass the user id' })
   userId: string;
+
+  @ApiProperty({
+    example: 'Project Tasks',
+    description: 'The tasks of the project',
+    required: false,
+  })
+  tasks?: CreateTaskDto[];
 }
