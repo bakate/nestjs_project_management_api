@@ -29,14 +29,14 @@ export class ProjectsController {
     // retrieve the user from the req
     const authorization: string = req.headers['authorization'];
     const token = this.projectsService.getToken(authorization);
-    const user: { id: string; iat: number; exp: number } =
+    const user: { userId: string; iat: number; exp: number; email: string } =
       await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET,
       });
 
     return this.projectsService.create({
       ...createProjectDto,
-      userId: user.id,
+      userId: user.userId,
     });
   }
 

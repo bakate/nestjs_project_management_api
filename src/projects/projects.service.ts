@@ -65,7 +65,7 @@ export class ProjectsService {
   }
 
   async findAll(): Promise<Project[]> {
-    return this.projectModel.find().populate('tasks');
+    return this.projectModel.find().populate('tasks').sort({ createdAt: -1 });
   }
 
   async findById(id: string): Promise<Project> {
@@ -117,7 +117,9 @@ export class ProjectsService {
   }
 
   async findAllTasks(projectId: string) {
-    const tasks = await this.taskModel.find({ projectId });
+    const tasks = await this.taskModel
+      .find({ projectId })
+      .sort({ createdAt: -1 });
     if (!tasks) {
       throw new NotFoundException('Tasks not found');
     }
