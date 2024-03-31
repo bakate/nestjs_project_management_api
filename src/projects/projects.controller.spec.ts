@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
 import mongoose from 'mongoose';
@@ -20,9 +20,12 @@ describe('ProjectsController', () => {
     status: 'active',
     userId,
   };
+
+  const token = 'token';
   const mockUser = {
-    id: userId,
-    name: faker.internet.displayName(),
+    userId: userId,
+    iat: faker.number.int(),
+    exp: faker.number.int(),
     email: faker.internet.email(),
   };
 
@@ -33,6 +36,11 @@ describe('ProjectsController', () => {
     findById: jest.fn().mockResolvedValueOnce(mockProject),
     updateById: jest.fn(),
     removeById: jest.fn().mockResolvedValueOnce({ deleted: true }),
+    getToken: jest.fn().mockReturnValue(token),
+  };
+
+  const mockJwtService = {
+    verifyAsync: jest.fn().mockResolvedValue(mockUser),
   };
 
   beforeEach(async () => {
@@ -47,6 +55,10 @@ describe('ProjectsController', () => {
           provide: ProjectsService,
           useValue: mockProjectService,
         },
+        {
+          provide: JwtService,
+          useValue: mockJwtService,
+        },
       ],
     }).compile();
 
@@ -54,61 +66,68 @@ describe('ProjectsController', () => {
     service = module.get<ProjectsService>(ProjectsService);
   });
 
-  it('should get all projects', async () => {
-    const result = await controller.findAll();
+  describe('get all projects', () => {
+    it('should get all projects', async () => {
+      const result = await controller.findAll();
 
-    expect(result).toEqual([mockProject]);
-    expect(service.findAll).toHaveBeenCalled();
+      expect(result).toEqual([mockProject]);
+      expect(service.findAll).toHaveBeenCalled();
+    });
   });
 
-  it('should get a project by id', async () => {
-    const result = await controller.findById(mockProject.id);
+  describe('get a project by ID', () => {
+    it('should get a project by id', async () => {
+      const result = await controller.findById(mockProject.id);
 
-    expect(result).toEqual(mockProject);
-    expect(service.findById).toHaveBeenCalledWith(mockProject.id);
+      expect(result).toEqual(mockProject);
+      expect(service.findById).toHaveBeenCalledWith(mockProject.id);
+    });
   });
 
-  it('should update a project', async () => {
-    const updateProjectDto = {
-      ...mockProject,
-      description: faker.lorem.sentence(),
-    };
-    mockProjectService.updateById = jest
-      .fn()
-      .mockResolvedValueOnce(updateProjectDto);
+  describe('update a project', () => {
+    it('should update a project', async () => {
+      const updateProjectDto = {
+        ...mockProject,
+        description: faker.lorem.sentence(),
+      };
+      mockProjectService.updateById = jest
+        .fn()
+        .mockResolvedValueOnce(updateProjectDto);
 
-    const result = await controller.updateById(
-      mockProject.id,
-      updateProjectDto,
-    );
+      const result = await controller.updateById(
+        mockProject.id,
+        updateProjectDto,
+      );
 
-    expect(result).toEqual(updateProjectDto);
+      expect(result).toEqual(updateProjectDto);
+    });
   });
 
-  it('should remove a project', async () => {
-    const result = await controller.removeById(mockProject.id);
+  describe('remove a project', () => {
+    it('should remove a project', async () => {
+      const result = await controller.removeById(mockProject.id);
 
-    expect(result).toEqual({ deleted: true });
-    expect(service.removeById).toHaveBeenCalledWith(mockProject.id);
+      expect(result).toEqual({ deleted: true });
+      expect(service.removeById).toHaveBeenCalledWith(mockProject.id);
+    });
   });
 
-  // it('should create a project', async () => {
-  //   const createProjectDto = {
-  //     name: mockProject.name,
-  //     description: mockProject.description,
-  //     status: mockProject.status,
-  //   };
-  //   mockProjectService.create = jest.fn().mockResolvedValueOnce(mockProject);
+  describe('create a project', () => {
+    it('should create a project', async () => {
+      const expectedOutput = mockProject;
+      mockProjectService.create = jest
+        .fn()
+        .mockResolvedValueOnce(expectedOutput);
 
-  //   const result = await controller.create({
-  //     ...createProjectDto,
-  //     userId: mockUser.id,
-  //   }, );
+      const req = {
+        headers: {
+          authorization: 'Bearer token',
+        },
+      } as unknown as Request;
 
-  //   expect(result).toEqual(mockProject);
-  //   expect(service.create).toHaveBeenCalledWith({
-  //     ...createProjectDto,
-  //     userId: mockUser.id,
-  //   });
-  // });
+      const result = await controller.create(mockProject, req);
+
+      expect(result).toEqual(expectedOutput);
+    });
+  });
 });

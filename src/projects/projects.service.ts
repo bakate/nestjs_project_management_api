@@ -65,7 +65,11 @@ export class ProjectsService {
   }
 
   async findAll(): Promise<Project[]> {
-    return this.projectModel.find().populate('tasks').sort({ createdAt: -1 });
+    return this.projectModel
+      .find()
+      .populate('tasks')
+      .sort({ createdAt: -1 })
+      .exec();
   }
 
   async findById(id: string): Promise<Project> {
@@ -86,9 +90,47 @@ export class ProjectsService {
     id: string,
     updateProjectDto: UpdateProjectDto,
   ): Promise<Project[]> {
-    return this.projectModel.findByIdAndUpdate(id, updateProjectDto, {
-      new: true,
-    });
+    // check if there as some task to update
+    const { tasks = [], ...restOfProject } = updateProjectDto;
+    let taskIds = [];
+    if (tasks.length > 0) {
+      // we delete all the tasks that are not in the tasks array
+      await this.taskModel.deleteMany({
+        projectId: id,
+        _id: { $nin: tasks.map((task) => task.id) },
+      });
+
+      const updatedTasks = await Promise.all(
+        tasks.map(async (task) => {
+          if (!task.id) {
+            // we create a new task
+            return this.taskModel.create({
+              ...task,
+              projectId: id,
+            });
+          } else {
+            // we update the task
+            const { id, ...restOfTask } = task;
+            return this.taskModel.findByIdAndUpdate(id, restOfTask, {
+              new: true,
+            });
+          }
+        }),
+      );
+      // we update the project with the updated tasks
+      taskIds = updatedTasks.map((task) => task._id);
+    }
+
+    return this.projectModel.findByIdAndUpdate(
+      id,
+      {
+        ...restOfProject,
+        tasks: taskIds,
+      },
+      {
+        new: true,
+      },
+    );
   }
 
   async removeById(id: string): Promise<Project> {
@@ -119,7 +161,8 @@ export class ProjectsService {
   async findAllTasks(projectId: string) {
     const tasks = await this.taskModel
       .find({ projectId })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .exec();
     if (!tasks) {
       throw new NotFoundException('Tasks not found');
     }
@@ -155,7 +198,9 @@ export class ProjectsService {
     if (!project) {
       throw new NotFoundException('Project not found');
     }
-    project.tasks = project.tasks.filter((id) => id.toString() !== taskId);
+    project.tasks = (project.tasks ?? []).filter(
+      (id) => id.toString() !== taskId,
+    );
     await project.save();
     const task = await this.taskModel.findOne({ projectId, _id: taskId });
     if (!task) {

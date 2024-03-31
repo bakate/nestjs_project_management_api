@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmpty, IsNotEmpty, IsString, MinLength } from 'class-validator';
-import { CreateTaskDto } from './task.dto';
+import { Task } from '../schemas/task.schema';
 
 export class CreateProjectDto {
   @ApiProperty({
@@ -44,7 +44,7 @@ export class CreateProjectDto {
     description: 'The tasks of the project',
     required: false,
   })
-  tasks?: CreateTaskDto[];
+  tasks?: Task[];
 }
 
 export class UpdateProjectDto {
@@ -83,5 +83,5 @@ export class UpdateProjectDto {
     description: 'The tasks of the project',
     required: false,
   })
-  tasks?: CreateTaskDto[];
+  tasks?: Task[];
 }
